@@ -23,31 +23,59 @@ def loadData():                                 #文件读取函数
 def sigmoid(z):
     return 1.0/(1+exp(-z));
 
+def cost(weight,x,y):
+    weight = np.matrix(weight)
+    x = np.matrix(x)
+    y = np.matrix(y)
+    first = np.multiply(-y,np.log(sigmoid(x*weight)))
+    second = np.multiply((1-y),np.log(1-sigmoid(x*weight))) 
+    return np.sum((first-second)/len(x))
+
+def prdict(weight,x,y):
+    l  =len(x) 
+    c = 0
+    for i in range(l):
+          u = x[i][0]*weight[0][0]+x[i][1]*weight[1][0]+x[i][2]*weight[2][0]
+          u = float(sigmoid(u)) 
+          if (y[i]==1 and u >0.5 ) or (y[i]==0 and u <0.5 ):
+             c+=1
+          i +=1
+    return float(c)/float(l)
+
+
+
 def gradAscent(xArr,yArr):
     xArr = mat(xArr)
     yArr = mat(yArr).transpose()
-    maxCycles = 2000
+    maxCycles = 1000
     m,n = shape(xArr)
-    weights = ones((n,1))
+    alpha = 0.004
+    weights = zeros((n,1))
     weights_history1 = []
     weights_history2 = []
     weights_history3 = []
+    cost_h = []
     iters = []
     i = 0
+    print "初始代价为："
+    print cost(weights,xArr,yArr)
     for k in range(maxCycles):
         for j in range(m):
-            alpha = 13/(1.0+k+j)+0.0002
+            alpha = 1.3/(1.0+k+j)+0.0002
             h = sigmoid(sum(xArr[j]*weights))
             error = yArr[j] - h
             error = float(error)
-            weights += alpha * xArr[j].transpose()*error
+            cost_h.append(float(cost(weights,xArr,yArr)))
             weights_history1.append(float(weights[0][0]))
             weights_history2.append(float(weights[1][0]))
             weights_history3.append(float(weights[2][0]))
+            weights += alpha * xArr[j].transpose()*error
             iters.append(i)
             i+=1
     
-    return weights,weights_history1,weights_history2,weights_history3,iters
+    print "最终代价为: "
+    print cost(weights,xArr,yArr)
+    return weights,weights_history1,weights_history2,weights_history3,iters,cost_h
 
 
 def show(xArr,yArr,weights):
@@ -72,13 +100,12 @@ def show(xArr,yArr,weights):
     plt.title('Logistic',size=30)                  # 标题
     plt.show()  
 
-def show1(weight1,weight2,weight3,iters):
-
-    plt.figure(12)
+def show1(weight1,weight2,weight3,iters,cost_h):
+    plt.figure(1)
     plt.subplot(221)
     plt.xlabel('isers',size=10)
     plt.ylabel('weight1',size=10)
-    plt.plot(iters,weight1,'ro')
+    plt.plot(iters,weight1,'bo')
     
    
     plt.subplot(222)
@@ -86,14 +113,22 @@ def show1(weight1,weight2,weight3,iters):
     plt.ylabel('weight2',size=10)
     plt.plot(iters,weight2,'bo')
     
-    plt.subplot(212)
+    plt.subplot(223)
     plt.xlabel('isers',size=10)
     plt.ylabel('weight3',size=10)
     plt.plot(iters,weight3,'go')
 
+    plt.subplot(224)
+    plt.xlabel('isers',size=10)
+    plt.ylabel('cost',size=10)
+    plt.plot(iters,cost_h,'go')
     plt.show()
 
 xArr,yArr= loadData()
-weight,weight1,weight2,weight3,iters= gradAscent(xArr,yArr)
+weight,weight1,weight2,weight3,iters,cost_h= gradAscent(xArr,yArr)
+print "求得的参数为："
+print weight
+print "某考生两次的考试成绩分别为45,85时，录取的概率为："
+print prdict(weight,xArr,yArr)
 show(xArr,yArr,weight)
-show1(weight1,weight2,weight3,iters)
+show1(weight1,weight2,weight3,iters,cost_h)
